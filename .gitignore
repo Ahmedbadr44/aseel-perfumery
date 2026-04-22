@@ -1,0 +1,12 @@
+node_modules/
+.next/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+firebase-service-account.json
+firebase-service-account*.json
+.firebaserc
+.mcp.json
+vercel-env*.txt

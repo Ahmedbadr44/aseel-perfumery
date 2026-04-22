@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# The Next.js plugin is automatically included by Netlify,
+# but can be explicitly defined here to ensure version control.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #043927; /* Darker Luxury Emerald */
+  --color-secondary: #d4af37; /* Pure Luxury Gold */
+  --color-accent: #f9e29c; /* Soft Gold Shimmer */
+  --color-background: #ffffff;
+  --color-surface: #fafaf9;
+  
+  --font-display: "Amiri", serif;
+  --font-sans: "Noto Sans Arabic", sans-serif;
+}
+
+:root {
+  --background: #fafaf9;
+  --foreground: #1a1a1a;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* Custom scrollbar for premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5a059;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a6864a;
+}
+
+.gold-gradient {
+  background: linear-gradient(45deg, #c5a059, #f9e29c, #c5a059);
+}
+
+.text-gold {
+  color: #c5a059;
+}
+
+.bg-emerald {
+  background-color: #064e3b;
+}
