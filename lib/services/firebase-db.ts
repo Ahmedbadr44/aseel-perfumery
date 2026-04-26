@@ -29,6 +29,17 @@ export interface Product {
   inspired_by_name?: string;
   inspired_by_image?: string;
   is_best_seller: boolean;
+  is_trending_now?: boolean;
+  selling_points?: {
+    longevity?: string;
+    sillage?: string;
+    occasion?: string;
+  };
+  prices?: {
+    "30ml"?: number;
+    "50ml"?: number;
+    "100ml"?: number;
+  };
   created_at: Timestamp | Date;
 }
 
@@ -89,6 +100,12 @@ export const productsService = {
 
   async getBestSellers(): Promise<Product[]> {
     const q = query(getCollection("products"), where("is_best_seller", "==", true));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Product));
+  },
+
+  async getTrendingNow(): Promise<Product[]> {
+    const q = query(getCollection("products"), where("is_trending_now", "==", true));
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Product));
   },

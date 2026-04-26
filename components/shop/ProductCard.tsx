@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, Eye } from 'lucide-react';
+import { ShoppingCart, Eye, Truck } from 'lucide-react';
 import { Product } from '@/lib/services/firebase-db';
 import { useCartStore } from '@/lib/store/useCartStore';
 import { motion } from 'motion/react';
@@ -42,7 +42,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Quick Actions Overlay */}
         <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
           <button
-            onClick={() => addItem(product, '30ml', 150)}
+            onClick={() => addItem(product, '30ml', product.prices?.['30ml'] ?? product.price)}
             className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary hover:bg-secondary hover:text-white transition-all shadow-lg"
             title="أضف للسلة"
           >
@@ -69,9 +69,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </h3>
         </Link>
         <div className="flex items-center justify-center gap-2">
-          <span className="text-lg font-bold text-primary">{product.price.toLocaleString()} جنيه</span>
+          <span className="text-lg font-bold text-primary">يبدأ من {(product.prices?.['30ml'] ?? product.price).toLocaleString()} جنيه</span>
         </div>
         
+        <div className="flex items-center justify-center gap-2 mt-3 text-xs text-gray-400">
+          <Truck size={14} />
+          <span>توصيل 2-4 أيام عمل</span>
+        </div>
+
         {product.inspired_by_name && (
           <p className="text-[10px] text-gray-400 mt-3 border-t pt-3">
             مستوحى من: {product.inspired_by_name}

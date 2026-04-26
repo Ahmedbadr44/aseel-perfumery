@@ -5,10 +5,22 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY;
+    const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
+    const urlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+
+    if (!publicKey || !privateKey || !urlEndpoint) {
+      console.warn("ImageKit environment variables are missing. Skipping ImageKit initialization.");
+      return NextResponse.json(
+        { error: "ImageKit configuration missing" },
+        { status: 500 }
+      );
+    }
+
     const imagekit = new ImageKit({
-      publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-      privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
-      urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+      publicKey,
+      privateKey,
+      urlEndpoint,
     });
 
     const authenticationParameters = imagekit.getAuthenticationParameters();

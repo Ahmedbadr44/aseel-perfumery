@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,6 +19,17 @@ const productSchema = z.object({
   inspired_by_name: z.string().optional(),
   inspired_by_image: z.string().optional(),
   is_best_seller: z.boolean().default(false),
+  is_trending_now: z.boolean().default(false),
+  selling_points: z.object({
+    longevity: z.string().optional(),
+    sillage: z.string().optional(),
+    occasion: z.string().optional(),
+  }).optional(),
+  prices: z.object({
+    "30ml": z.number().min(1, "السعر مطلوب").optional(),
+    "50ml": z.number().min(1, "السعر مطلوب").optional(),
+    "100ml": z.number().min(1, "السعر مطلوب").optional(),
+  }).optional(),
 });
 
 type ProductFormData = z.input<typeof productSchema>;
@@ -36,7 +47,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
-  
+
   const [notes, setNotes] = useState({
     top: product?.notes?.top || [""],
     middle: product?.notes?.middle || [""],
@@ -62,12 +73,26 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           inspired_by_name: product.inspired_by_name || "",
           inspired_by_image: product.inspired_by_image || "",
           is_best_seller: product.is_best_seller || false,
+          is_trending_now: product.is_trending_now || false,
+          selling_points: {
+            longevity: product.selling_points?.longevity || "",
+            sillage: product.selling_points?.sillage || "",
+            occasion: product.selling_points?.occasion || "",
+          },
+          prices: product.prices || {},
         }
       : {
           gender: "unisex",
           is_best_seller: false,
+          is_trending_now: false,
           image: "",
           inspired_by_image: "",
+          selling_points: {
+            longevity: "",
+            sillage: "",
+            occasion: "",
+          },
+          prices: {},
         },
   });
 
@@ -76,7 +101,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const authenticator = async () => {
     try {
-      const response = await fetch('/api/imagekit/auth');
+      const response = await fetch("/api/imagekit/auth");
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
       }
@@ -94,8 +119,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const handleUploadError = (err: any) => {
-    console.error('Error uploading image:', err);
-    alert('حدث خطأ أثناء رفع الصورة');
+    console.error("Error uploading image:", err);
+    alert("حدث خطأ أثناء رفع الصورة");
     setUploadingField(null);
   };
 
@@ -167,6 +192,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           base: notes.base.filter((n) => n.trim() !== ""),
         },
         is_best_seller: data.is_best_seller ?? false,
+        is_trending_now: data.is_trending_now ?? false,
+        selling_points: {
+          longevity: data.selling_points?.longevity?.trim() || "",
+          sillage: data.selling_points?.sillage?.trim() || "",
+          occasion: data.selling_points?.occasion?.trim() || "",
+        },
+        prices: data.prices,
       };
 
       if (product) {
@@ -184,9 +216,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   return (
-    <>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-12">
-      {/* Basic Info */}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="text-sm font-bold text-gray-700">اسم المنتج</label>
@@ -202,7 +232,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
         <div className="space-y-2">
           <label className="text-sm font-bold text-gray-700">
-            السعر (جنيه)
+            السعر الأساسي (جنيه)
           </label>
           <input
             type="number"
@@ -213,6 +243,41 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           {errors.price && (
             <p className="text-red-500 text-xs">{errors.price.message}</p>
           )}
+        </div>
+      </div>
+
+      <div className="p-6 bg-gray-50 rounded-3xl space-y-6">
+        <h4 className="font-display font-bold text-primary flex items-center gap-2">
+          الأسعار حسب الحجم
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700">سعر 30ml</label>
+            <input
+              type="number"
+              {...register("prices.30ml", { valueAsNumber: true })}
+              className="w-full px-4 py-3 rounded-xl border border-white outline-none focus:border-secondary transition-all bg-white"
+              placeholder="150"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700">سعر 50ml</label>
+            <input
+              type="number"
+              {...register("prices.50ml", { valueAsNumber: true })}
+              className="w-full px-4 py-3 rounded-xl border border-white outline-none focus:border-secondary transition-all bg-white"
+              placeholder="250"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700">سعر 100ml</label>
+            <input
+              type="number"
+              {...register("prices.100ml", { valueAsNumber: true })}
+              className="w-full px-4 py-3 rounded-xl border border-white outline-none focus:border-secondary transition-all bg-white"
+              placeholder="500"
+            />
+          </div>
         </div>
       </div>
 
@@ -229,8 +294,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         )}
       </div>
 
-      {/* Categories & Best Seller */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="text-sm font-bold text-gray-700">النوع</label>
           <select
@@ -251,8 +315,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             placeholder="مثال: شرقي، خشبي"
           />
         </div>
+      </div>
 
-        <div className="flex items-center gap-2 pt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex items-center gap-2">
           <input
             type="checkbox"
             {...register("is_best_seller")}
@@ -266,9 +332,55 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             الأكثر مبيعاً
           </label>
         </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            {...register("is_trending_now")}
+            id="is_trending_now"
+            className="w-5 h-5 accent-secondary"
+          />
+          <label
+            htmlFor="is_trending_now"
+            className="text-sm font-bold text-gray-700"
+          >
+            رائج حالياً
+          </label>
+        </div>
       </div>
 
-      {/* Main Image Upload */}
+      <div className="p-6 bg-gray-50 rounded-3xl space-y-6">
+        <h4 className="font-display font-bold text-primary">
+          تفاصيل العرض في صفحة المنتج
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700">الثبات</label>
+            <input
+              {...register("selling_points.longevity")}
+              className="w-full px-4 py-3 rounded-xl border border-white outline-none focus:border-secondary transition-all bg-white"
+              placeholder="مثال: ثبات جيد للاستخدام اليومي"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700">الفوحان</label>
+            <input
+              {...register("selling_points.sillage")}
+              className="w-full px-4 py-3 rounded-xl border border-white outline-none focus:border-secondary transition-all bg-white"
+              placeholder="مثال: فوحان متوازن غير مزعج"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700">أنسب وقت للاستخدام</label>
+            <input
+              {...register("selling_points.occasion")}
+              className="w-full px-4 py-3 rounded-xl border border-white outline-none focus:border-secondary transition-all bg-white"
+              placeholder="مثال: مناسب لليوم والمساء"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-4">
         <label className="text-sm font-bold text-gray-700">صورة العطر</label>
         <div className="flex items-center gap-6">
@@ -293,7 +405,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             <label className="cursor-pointer bg-white border border-gray-300 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition-all inline-block">
               <span className="flex items-center gap-2">
                 {uploadingField === "image" ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                {(currentImage && !currentImage.includes('placeholder')) ? "تغيير الصورة" : "رفع صورة المنتج"}
+                {(currentImage && !currentImage.includes("placeholder")) ? "تغيير الصورة" : "رفع صورة المنتج"}
               </span>
               <input
                 type="file"
@@ -310,7 +422,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         )}
       </div>
 
-      {/* Inspired By Section */}
       <div className="p-6 bg-gray-50 rounded-3xl space-y-6">
         <h4 className="font-display font-bold text-primary flex items-center gap-2">
           <Plus size={18} />
@@ -327,13 +438,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 placeholder="مثال: Sauvage - Dior"
               />
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-700">صورة الماركة</label>
               <label className="cursor-pointer bg-white border border-gray-200 w-full p-4 rounded-xl flex items-center justify-center gap-2 text-gray-500 hover:bg-gray-50 transition-all border-dashed border-2">
                 {uploadingField === "inspired_by_image" ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
                 <span className="text-sm font-bold">
-                  {uploadingField === "inspired_by_image" ? "جاري الرفع..." : (currentInspiredImage && !currentInspiredImage.includes('placeholder')) ? "تم الرفع - تغيير؟" : "اضغط لرفع صورة الماركة"}
+                  {uploadingField === "inspired_by_image" ? "جاري الرفع..." : (currentInspiredImage && !currentInspiredImage.includes("placeholder")) ? "تم الرفع - تغيير؟" : "اضغط لرفع صورة الماركة"}
                 </span>
                 <input
                   type="file"
@@ -347,7 +458,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
           <div className="flex items-center justify-center">
             <div className="relative w-32 h-32 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden">
-               {currentInspiredImage ? (
+              {currentInspiredImage ? (
                 <Image
                   src={currentInspiredImage}
                   alt="Inspired Preview"
@@ -362,7 +473,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
       </div>
 
-      {/* Notes Section */}
       <div className="space-y-6 pt-4">
         <h4 className="font-display font-bold text-primary border-r-4 border-secondary pr-4">
           مكونات العطر (النوتات)
@@ -386,7 +496,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       handleNoteChange(type, index, e.target.value)
                     }
                     className="px-4 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-secondary bg-white min-w-[120px]"
-                    placeholder="زعفران، لمون..."
+                    placeholder="زعفران، ليمون..."
                   />
                   <button
                     type="button"
@@ -409,7 +519,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         ))}
       </div>
 
-      {/* Action Buttons */}
       <div className="flex justify-end gap-4 pt-8 border-t sticky bottom-0 bg-white/95 backdrop-blur-sm z-10 pb-4">
         <button
           type="button"
@@ -427,6 +536,5 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </button>
       </div>
     </form>
-  </>
   );
 };

@@ -14,6 +14,12 @@ export interface Product {
   inspired_by_name?: string;
   inspired_by_image?: string;
   is_best_seller: boolean;
+  is_trending_now?: boolean;
+  selling_points?: {
+    longevity?: string;
+    sillage?: string;
+    occasion?: string;
+  };
   created_at?: Date | string;
 }
 

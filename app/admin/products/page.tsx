@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Package,
@@ -8,15 +8,9 @@ import {
   Search,
   Edit2,
   Trash2,
-  LayoutDashboard,
-  ShoppingBag,
-  Users,
-  LogOut,
   X,
   Menu,
-  MoreVertical,
 } from "lucide-react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { productsService, Product } from "@/lib/services/firebase-db";
@@ -26,12 +20,21 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function AdminProductsPage() {
   const router = useRouter();
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  const fetchProducts = async () => {
+    try {
+      const data = await productsService.getAll();
+      setProducts(data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
 
   useEffect(() => {
     if (!user || !isAdmin) {
@@ -39,7 +42,7 @@ export default function AdminProductsPage() {
       return;
     }
 
-    const fetchProducts = async () => {
+    const loadProducts = async () => {
       try {
         const data = await productsService.getAll();
         setProducts(data);
@@ -48,35 +51,31 @@ export default function AdminProductsPage() {
       }
     };
 
-    fetchProducts();
-  }, [router]);
+    void loadProducts();
+  }, [router, user, isAdmin]);
 
   const handleDelete = async (id: string) => {
     if (confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
       try {
         await productsService.delete(id);
-        const data = await productsService.getAll();
-        setProducts(data);
+        await fetchProducts();
       } catch (error) {
         console.error("Error deleting product:", error);
       }
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    router.push("/login");
-  };
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar (Same as Dashboard) */}
       <AdminSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
 
-      {/* Main Content */}
       <main
         className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "mr-64" : "mr-0"}`}
       >
@@ -103,7 +102,6 @@ export default function AdminProductsPage() {
         </header>
 
         <div className="p-8">
-          {/* Layout Toggle (Optional) & Search */}
           <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-8">
             <div className="relative w-full max-w-md">
               <Search
@@ -120,98 +118,99 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <AnimatePresence>
-              {products
-                .filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                .map((product) => (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
-                  >
-                    {/* Visual Comparison Area */}
-                    <div className="relative aspect-[4/5] bg-gray-50 p-4 space-y-4">
-                      {/* Main Product Image */}
-                      <div className="relative h-full w-full rounded-2xl overflow-hidden bg-white shadow-inner">
+              {filteredProducts.map((product) => (
+                <motion.div
+                  key={product.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
+                >
+                  <div className="relative aspect-[4/5] bg-gray-50 p-4 space-y-4">
+                    <div className="relative h-full w-full rounded-2xl overflow-hidden bg-white shadow-inner">
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+
+                    {product.inspired_by_image && (
+                      <div className="absolute bottom-6 left-6 w-16 h-16 rounded-xl bg-white/90 backdrop-blur-sm border border-gray-100 shadow-lg overflow-hidden flex items-center justify-center p-1">
                         <Image
-                          src={product.image}
-                          alt={product.name}
+                          src={product.inspired_by_image}
+                          alt="Inspired Original"
                           fill
-                          className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+                          className="object-contain p-1"
                         />
                       </div>
+                    )}
 
-                      {/* Inspired By Mini-Card */}
-                      {product.inspired_by_image && (
-                        <div className="absolute bottom-6 left-6 w-16 h-16 rounded-xl bg-white/90 backdrop-blur-sm border border-gray-100 shadow-lg overflow-hidden flex items-center justify-center p-1 group/brand">
-                          <Image
-                            src={product.inspired_by_image}
-                            alt="Inspired Original"
-                            fill
-                            className="object-contain p-1"
-                          />
-                          <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover/brand:opacity-100 transition-opacity flex items-center justify-center text-[8px] text-white text-center font-bold">
-                            البراند<br/>الأصلي
-                          </div>
-                        </div>
-                      )}
+                    {product.is_best_seller && (
+                      <div className="absolute top-6 right-6 bg-secondary text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg">
+                        الأكثر مبيعاً
+                      </div>
+                    )}
 
-                      {/* Best Seller Badge */}
-                      {product.is_best_seller && (
-                        <div className="absolute top-6 right-6 bg-secondary text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg">
-                          الأكثر مبيعاً
+                    {product.is_trending_now && (
+                      <div className="absolute top-6 left-6 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg">
+                        رائج حالياً
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-6 space-y-4 flex-1 flex flex-col">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{product.category}</span>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase">{product.gender}</span>
+                      </div>
+                      <h3 className="text-lg font-display font-bold text-primary line-clamp-1">{product.name}</h3>
+                      {(product.selling_points?.longevity || product.selling_points?.sillage || product.selling_points?.occasion) && (
+                        <div className="mt-2 space-y-1 text-xs text-gray-400">
+                          {product.selling_points?.longevity && <p>الثبات: {product.selling_points.longevity}</p>}
+                          {product.selling_points?.sillage && <p>الفوحان: {product.selling_points.sillage}</p>}
+                          {product.selling_points?.occasion && <p>الوقت: {product.selling_points.occasion}</p>}
                         </div>
                       )}
                     </div>
 
-                    {/* Info Area */}
-                    <div className="p-6 space-y-4 flex-1 flex flex-col">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{product.category}</span>
-                          <span className="text-[10px] text-gray-400 font-bold uppercase">{product.gender}</span>
-                        </div>
-                        <h3 className="text-lg font-display font-bold text-primary line-clamp-1">{product.name}</h3>
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
+                      <div className="text-xl font-bold text-primary">
+                        {product.price.toLocaleString()} <span className="text-xs text-gray-400">جنيه</span>
                       </div>
 
-                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
-                        <div className="text-xl font-bold text-primary">
-                          {product.price.toLocaleString()} <span className="text-xs text-gray-400">جنيه</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingProduct(product);
-                              setIsModalOpen(true);
-                            }}
-                            className="p-2 text-primary hover:bg-gray-100 rounded-xl transition-all"
-                            title="تعديل"
-                          >
-                            <Edit2 size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(product.id)}
-                            className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition-all"
-                            title="حذف"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingProduct(product);
+                            setIsModalOpen(true);
+                          }}
+                          className="p-2 text-primary hover:bg-gray-100 rounded-xl transition-all"
+                          title="تعديل"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition-all"
+                          title="حذف"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </div>
-                  </motion.div>
-                ))}
+                  </div>
+                </motion.div>
+              ))}
             </AnimatePresence>
           </div>
 
-          {/* Empty State */}
-          {products.length > 0 && products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+          {products.length > 0 && filteredProducts.length === 0 && (
             <div className="text-center py-20 bg-white rounded-[2rem] border border-dashed border-gray-200">
               <Package className="mx-auto text-gray-300 mb-4" size={48} />
               <p className="text-gray-500">لا توجد منتجات تطابق بحثك</p>
@@ -220,7 +219,6 @@ export default function AdminProductsPage() {
         </div>
       </main>
 
-      {/* Product Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
@@ -252,9 +250,10 @@ export default function AdminProductsPage() {
               <div className="p-8 max-h-[75vh] overflow-y-auto">
                 <ProductForm
                   product={editingProduct}
-                  onSuccess={() => {
+                  onSuccess={async () => {
                     setIsModalOpen(false);
                     setEditingProduct(null);
+                    await fetchProducts();
                   }}
                   onCancel={() => {
                     setIsModalOpen(false);

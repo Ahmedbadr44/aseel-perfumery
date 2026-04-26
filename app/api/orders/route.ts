@@ -100,12 +100,11 @@ export async function POST(req: NextRequest) {
       if (!doc.exists) {
         throw new Error("PRODUCT_NOT_FOUND");
       }
-      const product = doc.data() as { name?: string; price?: number; image?: string };
+      const product = doc.data() as { name?: string; price?: number; image?: string; prices?: { '30ml'?: number, '50ml'?: number, '100ml'?: number } };
       if (typeof product.price !== "number" || !product.name) {
         throw new Error("INVALID_PRODUCT_DATA");
       }
-      const PRICES: Record<string, number> = { '30ml': 150, '50ml': 250, '100ml': 500 };
-      const itemPrice = PRICES[item.size] || product.price;
+      const itemPrice = product.prices?.[item.size as '30ml' | '50ml' | '100ml'] ?? product.price;
 
       return {
         id: item.id,

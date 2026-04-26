@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/components/shop/ProductCard';
+import { TrustBar } from '@/components/shared/TrustBar';
 import { Product } from '@/lib/services/firebase-db';
 import { productsService } from '@/lib/services/firebase-db';
 import { Search, SlidersHorizontal, Loader2 } from 'lucide-react';
@@ -61,6 +62,8 @@ export default function ShopPage() {
           استكشف مجموعتنا الكاملة من العطور الفاخرة المصممة بعناية لتناسب جميع الأذواق والمناسبات.
         </p>
       </div>
+
+      <TrustBar />
 
       {/* Filters & Search */}
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -137,4 +140,3 @@ export default function ShopPage() {
     </main>
   );
 }
-
